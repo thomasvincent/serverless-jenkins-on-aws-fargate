@@ -12,7 +12,7 @@ resource "aws_ecs_cluster" "jenkins_controller" {
 resource "aws_ecs_cluster" "jenkins_agents" {
   name = "${var.name_prefix}-spot"
   setting {
-    name  = "containerInsights" 
+    name  = "containerInsights"
     value = "enabled"
   }
   tags = var.tags
@@ -80,11 +80,11 @@ resource "aws_ecs_task_definition" "jenkins_controller" {
 
 # Jenkins Controller ECS Service
 resource "aws_ecs_service" "jenkins_controller" {
-  name            = "${var.name_prefix}-controller"
-  cluster         = aws_ecs_cluster.jenkins_controller.id
-  task_definition = aws_ecs_task_definition.jenkins_controller.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
+  name             = "${var.name_prefix}-controller"
+  cluster          = aws_ecs_cluster.jenkins_controller.id
+  task_definition  = aws_ecs_task_definition.jenkins_controller.arn
+  desired_count    = 1
+  launch_type      = "FARGATE"
   platform_version = "1.4.0"
 
   deployment_maximum_percent         = 100
@@ -92,7 +92,7 @@ resource "aws_ecs_service" "jenkins_controller" {
 
   network_configuration {
     subnets          = var.jenkins_controller_subnet_ids
-    security_groups  = [aws_security_group.jenkins_controller.id] 
+    security_groups  = [aws_security_group.jenkins_controller.id]
     assign_public_ip = false
   }
 
