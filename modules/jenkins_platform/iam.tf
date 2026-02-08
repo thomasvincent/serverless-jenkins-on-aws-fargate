@@ -110,14 +110,28 @@ data "aws_iam_policy_document" "ecs_execution" {
     effect = "Allow"
     actions = [
       "ecr:GetAuthorizationToken",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
       "ecr:BatchCheckLayerAvailability",
       "ecr:GetDownloadUrlForLayer",
       "ecr:BatchGetImage",
+    ]
+    resources = [aws_ecr_repository.jenkins_controller.arn]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
       "logs:CreateLogStream",
       "logs:CreateLogGroup",
       "logs:PutLogEvents",
     ]
-    resources = ["*"]
+    resources = ["${aws_cloudwatch_log_group.jenkins_controller.arn}:*"]
   }
 }
 
@@ -207,7 +221,7 @@ data "aws_iam_policy_document" "jenkins_controller_task" {
     actions = [
       "iam:PassRole",
     ]
-    resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*"]
+    resources = [aws_iam_role.ecs_execution.arn]
   }
 
   statement {
@@ -225,8 +239,29 @@ data "aws_iam_policy_document" "jenkins_controller_task" {
       "ecr:BatchCheckLayerAvailability",
       "ecr:BatchGetImage",
       "ecr:GetDownloadUrlForLayer",
-      "elasticfilesystem:ClientMount",
+    ]
+    resources = [aws_ecr_repository.jenkins_controller.arn]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
       "ecr:GetAuthorizationToken",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "elasticfilesystem:ClientMount",
+    ]
+    resources = [aws_efs_file_system.this.arn]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
       "ecs:RegisterTaskDefinition",
       "ecs:ListClusters",
       "ecs:DescribeContainerInstances",
@@ -234,7 +269,11 @@ data "aws_iam_policy_document" "jenkins_controller_task" {
       "ecs:DescribeTaskDefinition",
       "ecs:DeregisterTaskDefinition",
     ]
-    resources = ["*"]
+    resources = [
+      aws_ecs_cluster.jenkins_controller.arn,
+      aws_ecs_cluster.jenkins_agents.arn,
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/*",
+    ]
   }
 
   statement {
