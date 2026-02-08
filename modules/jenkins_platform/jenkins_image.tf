@@ -6,7 +6,7 @@ locals {
 
 resource "aws_ecr_repository" "jenkins_controller" {
   name                 = var.jenkins_ecr_repository_name
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -41,7 +41,7 @@ resource "null_resource" "build_docker_image" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      docker login -u AWS -p ${data.aws_ecr_authorization_token.token.password} ${local.ecr_endpoint}
+      echo ${data.aws_ecr_authorization_token.token.password} | docker login -u AWS --password-stdin ${local.ecr_endpoint}
       docker build -t ${aws_ecr_repository.jenkins_controller.repository_url}:latest ${path.module}/docker/
       docker push ${aws_ecr_repository.jenkins_controller.repository_url}:latest
     EOT
