@@ -26,8 +26,8 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "willbeoverwritten"
-    key    = "willbeoverwritten"
+    bucket  = "willbeoverwritten"
+    key     = "willbeoverwritten"
     encrypt = true
   }
 }

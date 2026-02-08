@@ -334,7 +334,7 @@ data "aws_iam_policy_document" "cloudwatch_kms" {
     ]
     effect = "Allow"
     principals {
-      type = "AWS"
+      type        = "AWS"
       identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
     resources = ["arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"]
@@ -350,7 +350,7 @@ data "aws_iam_policy_document" "cloudwatch_kms" {
     ]
     effect = "Allow"
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["logs.${data.aws_region.current.name}.amazonaws.com"]
     }
     resources = ["arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"]
