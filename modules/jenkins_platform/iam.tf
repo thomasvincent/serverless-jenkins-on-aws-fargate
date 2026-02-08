@@ -107,17 +107,36 @@ data "aws_iam_policy_document" "ecs_assume_role" {
 # ECS Execution Policy
 data "aws_iam_policy_document" "ecs_execution" {
   statement {
+    sid    = "ECRAuthToken"
     effect = "Allow"
     actions = [
       "ecr:GetAuthorizationToken",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "ECRImageAccess"
+    effect = "Allow"
+    actions = [
       "ecr:BatchCheckLayerAvailability",
       "ecr:GetDownloadUrlForLayer",
       "ecr:BatchGetImage",
+    ]
+    resources = [aws_ecr_repository.jenkins_controller.arn]
+  }
+
+  statement {
+    sid    = "CloudWatchLogs"
+    effect = "Allow"
+    actions = [
       "logs:CreateLogStream",
       "logs:CreateLogGroup",
       "logs:PutLogEvents",
     ]
-    resources = ["*"]
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/${var.name_prefix}*",
+    ]
   }
 }
 
@@ -207,7 +226,15 @@ data "aws_iam_policy_document" "jenkins_controller_task" {
     actions = [
       "iam:PassRole",
     ]
-    resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*"]
+    resources = [
+      aws_iam_role.ecs_execution.arn,
+      aws_iam_role.jenkins_controller_task.arn,
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+      values   = ["ecs-tasks.amazonaws.com"]
+    }
   }
 
   statement {
@@ -220,21 +247,54 @@ data "aws_iam_policy_document" "jenkins_controller_task" {
   }
 
   statement {
+    sid    = "ECRAuthToken"
+    effect = "Allow"
+    actions = [
+      "ecr:GetAuthorizationToken",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "ECRImageAccess"
     effect = "Allow"
     actions = [
       "ecr:BatchCheckLayerAvailability",
       "ecr:BatchGetImage",
       "ecr:GetDownloadUrlForLayer",
-      "elasticfilesystem:ClientMount",
-      "ecr:GetAuthorizationToken",
+    ]
+    resources = [aws_ecr_repository.jenkins_controller.arn]
+  }
+
+  statement {
+    sid    = "ECSTaskManagement"
+    effect = "Allow"
+    actions = [
       "ecs:RegisterTaskDefinition",
-      "ecs:ListClusters",
-      "ecs:DescribeContainerInstances",
       "ecs:ListTaskDefinitions",
       "ecs:DescribeTaskDefinition",
       "ecs:DeregisterTaskDefinition",
     ]
     resources = ["*"]
+  }
+
+  statement {
+    sid    = "ECSClusterAccess"
+    effect = "Allow"
+    actions = [
+      "ecs:ListClusters",
+      "ecs:DescribeContainerInstances",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "EFSMount"
+    effect = "Allow"
+    actions = [
+      "elasticfilesystem:ClientMount",
+    ]
+    resources = [aws_efs_file_system.this.arn]
   }
 
   statement {
@@ -277,7 +337,7 @@ data "aws_iam_policy_document" "cloudwatch_kms" {
       type = "AWS"
       identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
-    resources = ["*"]
+    resources = ["arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"]
   }
   statement {
     sid = "AllowCloudWatchLogs"
@@ -293,6 +353,11 @@ data "aws_iam_policy_document" "cloudwatch_kms" {
       type = "Service"
       identifiers = ["logs.${data.aws_region.current.name}.amazonaws.com"]
     }
-    resources = ["*"]
+    resources = ["arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"]
+    condition {
+      test     = "ArnLike"
+      variable = "kms:EncryptionContext:aws:logs:arn"
+      values   = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/${var.name_prefix}*"]
+    }
   }
 }

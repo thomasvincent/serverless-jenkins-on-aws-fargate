@@ -17,7 +17,7 @@ jenkins:
         - "Overall/Read:authenticated"
         - "Job/Read:authenticated"
         - "View/Read:authenticated"
-        - "Overall/Administer:authenticated"
+        - "Overall/Administer:ecsuser"
   crumbIssuer: "standard"
   slaveAgentPort: 50000
   clouds:
