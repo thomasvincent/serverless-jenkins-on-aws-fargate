@@ -1,4 +1,4 @@
-FROM jenkins/jenkins:lts-jdk11
+FROM jenkins/jenkins:lts-jdk21
 
 ENV JENKINS_HOME /var/jenkins_home
 ENV CASC_JENKINS_CONFIG $JENKINS_HOME/casc_configs/jenkins.yaml

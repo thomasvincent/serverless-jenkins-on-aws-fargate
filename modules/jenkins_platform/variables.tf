@@ -107,13 +107,13 @@ variable "efs_backup_delete_after_days" {
 
 variable "alb_type_internal" {
   type        = bool
-  default     = false
+  default     = true
   description = "Whether the Application Load Balancer should be internal"
 }
 
 variable "alb_enable_access_logs" {
   type        = bool
-  default     = false
+  default     = true
   description = "Whether to enable access logging for the Application Load Balancer"
 }
 

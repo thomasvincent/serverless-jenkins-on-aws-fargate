@@ -275,7 +275,9 @@ data "aws_iam_policy_document" "jenkins_controller_task" {
       "ecs:DescribeTaskDefinition",
       "ecs:DeregisterTaskDefinition",
     ]
-    resources = ["*"]
+    resources = [
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/*",
+    ]
   }
 
   statement {
@@ -285,7 +287,10 @@ data "aws_iam_policy_document" "jenkins_controller_task" {
       "ecs:ListClusters",
       "ecs:DescribeContainerInstances",
     ]
-    resources = ["*"]
+    resources = [
+      aws_ecs_cluster.jenkins_controller.arn,
+      aws_ecs_cluster.jenkins_agents.arn,
+    ]
   }
 
   statement {
