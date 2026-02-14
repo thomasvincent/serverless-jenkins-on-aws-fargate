@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "terraform"
-    directory: "/"
+    directory: "/example"
     schedule:
       interval: "weekly"
   - package-ecosystem: "github-actions"
