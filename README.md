@@ -1,5 +1,12 @@
 # AWS Serverless Jenkins Terraform Module
-Terraform module which creates a serverless Jenkins environment based on AWS Fargate. The following resources are created:
+
+Terraform module which creates a serverless Jenkins environment based on AWS Fargate.
+
+## Architecture
+
+![Architecture](docs/Jenkins.png)
+
+This module deploys a complete serverless Jenkins environment with the following components:
 
 * Two Amazon ECS clusters
     * One utilizing the standard `FARGATE` capacity provider, which is to be used by the Jenkins controller and high priority agents.
@@ -14,20 +21,86 @@ Terraform module which creates a serverless Jenkins environment based on AWS Far
 * IAM Roles for the above components
 * Security Groups for the above components
 
-![Architecture](docs/Jenkins.png)
-
-An example is included in the `example` directory.
 ## Prerequisites
-The following are required to deploy this Terraform module
 
-1. Terraform 0.14+  - Download at https://www.terraform.io/downloads.html
-1. Docker 19+ - Download at https://docs.docker.com/get-docker/
-1. A VPC with at least two public and two private subnets. Private subnets will require to have NAT gateway to be able to access resources such as secret manager, as well as update for Jenkins. 
-1. An SSL certificate to associate with the Application Load Balancer. It's recommended to use an ACM certificate. This is not done by the main Terraform module. However, the example in the `example` directory uses the [public AWS ACM module](https://registry.terraform.io/modules/terraform-aws-modules/acm/aws/latest) to create the ACM certificate and pass it to the Serverless Jenkins module. You may choose to do it this way or explicitly pass the ARN of a certificate that you had previously created or imported into ACM.
-1. An admin password for Jenkins must be stored in SSM Parameter store. This parameter must be of type `SecureString` and have the name `jenkins-pwd`. Username is `ecsuser`.
-1. Terraform must be bootstrapped. This means that a state S3 bucket and a state locking DynamoDB table must be initialized.
+The following are required to deploy this Terraform module:
+
+1. Terraform >= 0.14
+2. Docker >= 19
+3. A VPC with at least two public and two private subnets. Private subnets require NAT gateway access for resources such as Secrets Manager and Jenkins updates.
+4. An SSL certificate to associate with the Application Load Balancer (ACM recommended). See example in `example` directory for certificate creation.
+5. An admin password for Jenkins stored in SSM Parameter Store as `SecureString` with name `jenkins-pwd`. Username is `ecsuser`.
+6. Terraform bootstrap (S3 state bucket and DynamoDB state locking table).
+
+## Quick Start
+
+```bash
+# Initialize Terraform
+terraform init
+
+# Review planned changes
+terraform plan
+
+# Apply configuration
+terraform apply
+```
+
+## Module Structure
+
+- `modules/jenkins_platform/` - Main Jenkins platform module
+  - `ecs.tf` - ECS cluster and service definitions
+  - `efs.tf` - EFS filesystem configuration
+  - `iam.tf` - IAM roles and policies
+  - `variables.tf` - Input variable declarations
+  - `outputs.tf` - Output value definitions
+- `example/` - Deployable example configuration
+- `example/bootstrap/` - Terraform state bootstrapping
+
+## Variables
+
+See [Module Variables](#module-variables) section below for complete variable documentation.
+
+Key variables:
+- `vpc_id` - VPC where resources will be deployed
+- `efs_subnet_ids` - Private subnet IDs for EFS
+- `alb_subnet_ids` - Subnet IDs for Application Load Balancer
+- `jenkins_controller_subnet_ids` - Private subnet IDs for Jenkins controller
+- `alb_acm_certificate_arn` - ACM certificate ARN for HTTPS
+
+## Outputs
+
+Module outputs include:
+- Jenkins controller endpoint URL
+- ECS cluster IDs
+- ECR repository URL
+- ALB DNS name
+- Security group IDs
+
+See `modules/jenkins_platform/outputs.tf` for complete output definitions.
+
+## Development
+
+Format code:
+```bash
+terraform fmt -recursive
+```
+
+Validate configuration:
+```bash
+terraform validate
+```
+
+Run linting:
+```bash
+tflint
+```
+
+## Testing
+
+The module includes a deployable example in the `example` directory.
 
 ## Deployment
+
 This is packaged as a Terraform module, which means it's not directly deployable. However, there is a deployable example in the `example` directory. To deploy the example:
 
 1. Ensure you have met all the Prerequisites
