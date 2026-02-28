@@ -19,7 +19,7 @@ module "myip" {
 // Bring your own ACM cert for the Application Load Balancer
 module "acm" {
   source  = "terraform-aws-modules/acm/aws"
-  version = "~> v2.0"
+  version = "~> v6.3"
 
   domain_name = "${var.jenkins_dns_alias}.${var.route53_domain_name}"
   zone_id     = var.route53_zone_id
